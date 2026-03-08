@@ -44,14 +44,22 @@ function injectGoogleBadges(benefitsList) {
     let url = link.href;
     
     // Ignore internal Google links
-    if (url.includes('google.com/search') || url.includes('google.es/search') || url.startsWith('javascript:')) return;
+    if ((url.includes('google.com/search') || url.includes('google.es/search') || url.startsWith('javascript:')) && !url.includes('/aclk')) return;
     
-    // Handle sponsored Ads redirect URLs
-    if (url.includes('googleadservices.com') || url.includes('/url?')) {
+    // Extract real URL from Google ad redirects
+    const dataPcu = link.getAttribute('data-pcu') || link.getAttribute('data-rw');
+    if (dataPcu && dataPcu.startsWith('http') && !dataPcu.includes('google.com/aclk')) {
+        url = dataPcu;
+    } else if (url.includes('/aclk') || url.includes('/url?') || url.includes('googleadservices.com')) {
       try {
-         const urlObj = new URL(url);
-         // Sponsored ads usually put the destination in 'adurl' or 'q'
-         url = urlObj.searchParams.get('adurl') || urlObj.searchParams.get('url') || urlObj.searchParams.get('q') || url;
+         const urlObj = new URL(url, window.location.origin);
+         const adurl = urlObj.searchParams.get('adurl');
+         const qurl = urlObj.searchParams.get('q');
+         const plainurl = urlObj.searchParams.get('url');
+         
+         if (adurl && adurl.startsWith('http')) url = adurl;
+         else if (qurl && qurl.startsWith('http')) url = qurl;
+         else if (plainurl && plainurl.startsWith('http')) url = plainurl;
       } catch(e) {}
     }
 
@@ -62,7 +70,7 @@ function injectGoogleBadges(benefitsList) {
     
     if (match) {
       // Find a atomic container for the individual result (fixes missing badges on grids)
-      const container = link.closest('.g, .uEierd, .pla-unit, .sh-dgr__grid-result, .cu-container');
+      const container = link.closest('.g, .uEierd, .pla-unit, .sh-dgr__grid-result, .cu-container, .mnr-c');
       
       // If we found a strict individual container and it already has our badge, skip it (prevents mini-link dupes)
       if (container && container.querySelector('.repsol-google-badge')) {
@@ -78,24 +86,31 @@ function injectGoogleBadges(benefitsList) {
       badge.title = 'Repsol Beneficio!';
       
       const iconUrl = chrome.runtime.getURL('icons/extension16.png');
-      badge.innerHTML = `<img src="${iconUrl}" style="width:14px;height:14px;vertical-align:middle;margin-right:2px;display:inline-block;border-radius:2px;"><span class="repsol-badge-text" dir="ltr">${discountText}</span>`;
+      badge.innerHTML = `<img src="${iconUrl}" style="width:14px;height:14px;vertical-align:middle;margin-right:2px;display:inline-block;border-radius:2px;box-shadow:none;border:none;"><span class="repsol-badge-text" dir="ltr">${discountText}</span>`;
       
       // Inject logic: Look for headings explicitly (H3 for normal, div[role="heading"] for sponsored)
       const targetAnchor = link.querySelector('h3, div[role="heading"]');
+      let injected = false;
       
       if (targetAnchor) {
         // Insert right after the text inside the heading
         targetAnchor.appendChild(badge);
-      } else if (container) {
-        // Fallback for product cards where the link contains the store name or price
-        const storeNameOrPrice = link.querySelector('.mnpnne, .vnlHbd') || link.querySelector('span[dir="ltr"]');
-        if (storeNameOrPrice) {
-           storeNameOrPrice.parentElement.appendChild(badge);
-        } else {
-           link.appendChild(badge);
-        }
+        injected = true;
       } else {
-        link.appendChild(badge);
+        // Find any text element inside the link that contains the store name
+        const textNodes = Array.from(link.querySelectorAll('*')).filter(el => el.children.length === 0 && el.textContent.trim().length > 0);
+        for (let node of textNodes) {
+           if (cleanString(node.textContent).includes(domainInfo.clean)) {
+               node.parentElement.appendChild(badge);
+               injected = true;
+               break;
+           }
+        }
+      }
+      
+      // Ultimate fallback
+      if (!injected) {
+         link.appendChild(badge);
       }
     }
   });
@@ -118,7 +133,7 @@ function injectGoogleBadges(benefitsList) {
       badge.className = 'repsol-google-badge';
       badge.title = 'Repsol Beneficio!';
       const iconUrl = chrome.runtime.getURL('icons/extension16.png');
-      badge.innerHTML = `<img src="${iconUrl}" style="width:14px;height:14px;vertical-align:middle;margin-right:2px;display:inline-block;border-radius:2px;"><span class="repsol-badge-text" dir="ltr">${discountText}</span>`;
+      badge.innerHTML = `<img src="${iconUrl}" style="width:14px;height:14px;vertical-align:middle;margin-right:2px;display:inline-block;border-radius:2px;box-shadow:none;border:none;"><span class="repsol-badge-text" dir="ltr">${discountText}</span>`;
       
       span.parentElement.appendChild(badge);
     }
@@ -137,9 +152,7 @@ chrome.storage.local.get(['repsolBenefits'], (res) => {
         injectGoogleBadges(res.repsolBenefits);
     });
     
-    const searchContainer = document.getElementById('search') || document.body;
-    if (searchContainer) {
-        observer.observe(searchContainer, { childList: true, subtree: true });
-    }
+    // Always observe the body because Google sidebars and grids load outside the #search element!
+    observer.observe(document.body, { childList: true, subtree: true });
   }
 });
