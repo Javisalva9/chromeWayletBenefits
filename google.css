@@ -1,25 +1,35 @@
 .repsol-google-badge {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  background: linear-gradient(135deg, #ff8a00 0%, #ff512f 100%);
+  display: inline-flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  background: linear-gradient(135deg, #ff8a00 0%, #ff512f 100%) !important;
   color: white !important;
-  font-family: inherit;
-  font-size: 12px;
-  font-weight: bold;
-  padding: 2px 8px;
-  border-radius: 12px;
-  margin-left: 8px;
-  box-shadow: 0 2px 4px rgba(255, 138, 0, 0.3);
-  vertical-align: middle;
-  line-height: normal;
-  pointer-events: none; /* Let clicks pass through if placed weirdly */
+  font-family: inherit !important;
+  font-size: 12px !important;
+  font-weight: bold !important;
+  padding: 2px 8px !important;
+  border-radius: 12px !important;
+  margin-left: 8px !important;
+  box-shadow: 0 2px 4px rgba(255, 138, 0, 0.3) !important;
+  vertical-align: middle !important;
+  line-height: normal !important;
+  pointer-events: none !important;
+  
+  /* Force direction and prevent any Google flipping/transforms */
+  direction: ltr !important;
+  unicode-bidi: normal !important;
+  transform: none !important;
+  scale: 1 !important;
+  white-space: nowrap !important;
 }
 
 .repsol-badge-icon {
-  font-size: 10px;
+  font-size: 10px !important;
 }
 
 .repsol-badge-text {
   color: white !important;
+  direction: ltr !important;
+  unicode-bidi: isolate !important;
+  transform: none !important;
 }

@@ -36,7 +36,7 @@ function checkMatch(domainInfo, benefitsList) {
 }
 
 function injectGoogleBadges(benefitsList) {
-  // Select all links that we haven't processed yet
+  // 1. Process normal links and grids
   const links = document.querySelectorAll('a[href]:not(.repsol-processed)');
   
   links.forEach(link => {
@@ -61,23 +61,66 @@ function injectGoogleBadges(benefitsList) {
     const match = checkMatch(domainInfo, benefitsList);
     
     if (match) {
+      // Find a atomic container for the individual result (fixes missing badges on grids)
+      const container = link.closest('.g, .uEierd, .pla-unit, .sh-dgr__grid-result, .cu-container');
+      
+      // If we found a strict individual container and it already has our badge, skip it (prevents mini-link dupes)
+      if (container && container.querySelector('.repsol-google-badge')) {
+        return;
+      }
+
+      // Clean up the text: remove "de saldo" to make it shorter and cleaner
+      let rawText = match.cashbackMessage || (match.cashbackPercentage ? `${match.cashbackPercentage}%` : '✨');
+      let discountText = rawText.replace(/ de saldo/gi, '').trim();
+
       const badge = document.createElement('span');
       badge.className = 'repsol-google-badge';
       badge.title = 'Repsol Beneficio!';
       
-      const discountText = match.cashbackMessage || (match.cashbackPercentage ? `${match.cashbackPercentage}%` : '✨');
       const iconUrl = chrome.runtime.getURL('icons/extension16.png');
-      badge.innerHTML = `<img src="${iconUrl}" style="width:14px;height:14px;vertical-align:middle;margin-right:2px;display:inline-block;border-radius:2px;"><span class="repsol-badge-text">${discountText}</span>`;
+      badge.innerHTML = `<img src="${iconUrl}" style="width:14px;height:14px;vertical-align:middle;margin-right:2px;display:inline-block;border-radius:2px;"><span class="repsol-badge-text" dir="ltr">${discountText}</span>`;
       
-      // Inject logic: Look for headings or citations to place it neatly
-      const targetAnchor = link.querySelector('h3, div[role="heading"], cite, span.VuuXrf');
+      // Inject logic: Look for headings explicitly (H3 for normal, div[role="heading"] for sponsored)
+      const targetAnchor = link.querySelector('h3, div[role="heading"]');
       
-      if (targetAnchor && targetAnchor.parentElement) {
-        targetAnchor.parentElement.appendChild(badge);
+      if (targetAnchor) {
+        // Insert right after the text inside the heading
+        targetAnchor.appendChild(badge);
+      } else if (container) {
+        // Fallback for product cards where the link contains the store name or price
+        const storeNameOrPrice = link.querySelector('.mnpnne, .vnlHbd') || link.querySelector('span[dir="ltr"]');
+        if (storeNameOrPrice) {
+           storeNameOrPrice.parentElement.appendChild(badge);
+        } else {
+           link.appendChild(badge);
+        }
       } else {
-        // Fallback: just append to the end of the link's contents
         link.appendChild(badge);
       }
+    }
+  });
+
+  // 2. Process Google's sidebar Product Viewer (which uses JS instead of a[href] links)
+  const textMerchants = document.querySelectorAll('span.WJMUdc:not(.repsol-processed), span.bNg8Rb:not(.repsol-processed), div.sh-osd__merchant-name:not(.repsol-processed)');
+  textMerchants.forEach(span => {
+    span.classList.add('repsol-processed');
+    
+    const domainInfo = { raw: span.textContent.toLowerCase(), clean: cleanString(span.textContent) };
+    const match = checkMatch(domainInfo, benefitsList);
+    
+    if (match) {
+      if (span.parentElement.querySelector('.repsol-google-badge')) return;
+      
+      let rawText = match.cashbackMessage || (match.cashbackPercentage ? `${match.cashbackPercentage}%` : '✨');
+      let discountText = rawText.replace(/ de saldo/gi, '').trim();
+
+      const badge = document.createElement('span');
+      badge.className = 'repsol-google-badge';
+      badge.title = 'Repsol Beneficio!';
+      const iconUrl = chrome.runtime.getURL('icons/extension16.png');
+      badge.innerHTML = `<img src="${iconUrl}" style="width:14px;height:14px;vertical-align:middle;margin-right:2px;display:inline-block;border-radius:2px;"><span class="repsol-badge-text" dir="ltr">${discountText}</span>`;
+      
+      span.parentElement.appendChild(badge);
     }
   });
 }
