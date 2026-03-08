@@ -1,0 +1,124 @@
+#repsol-benefits-banner {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  z-index: 2147483647; /* Maximum z-index */
+  display: flex;
+  justify-content: center;
+  pointer-events: none;
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  
+  /* Initial hidden state for animation */
+  transform: translateY(-100%);
+  transition: transform 0.5s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+#repsol-benefits-banner.repsol-show {
+  transform: translateY(16px);
+}
+
+.repsol-banner-content {
+  background: rgba(22, 27, 34, 0.85); /* Deep dark background */
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3), 0 0 0 1px rgba(255, 138, 0, 0.2);
+  border-radius: 100px; /* Pill shaped */
+  padding: 8px 16px 8px 8px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  pointer-events: auto; /* Re-enable pointer events for the pill */
+  color: white;
+  min-width: fit-content;
+  max-width: 90%;
+}
+
+.repsol-clickable-area {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+  padding-right: 8px;
+  border-right: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.repsol-clickable-area:hover .repsol-title {
+  text-decoration: underline;
+}
+
+.repsol-logo {
+  width: 36px;
+  height: 36px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.repsol-logo svg {
+  width: 20px;
+  height: 20px;
+}
+
+.repsol-text-wrapper {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+.repsol-title {
+  font-size: 11px;
+  font-weight: 600;
+  color: #ff8a00;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 2px;
+}
+
+.repsol-discount {
+  font-size: 14px;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.repsol-discount strong {
+  font-weight: 800;
+  background: linear-gradient(to right, #ffffff, #e2e8f0);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
+
+.repsol-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.repsol-action-btn {
+  background: transparent;
+  border: none;
+  color: #8b949e;
+  font-size: 14px; /* Slightly smaller for icon */
+  cursor: pointer;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 26px;
+  height: 26px;
+  border-radius: 50%;
+  transition: all 0.2s ease;
+}
+
+.repsol-close-btn {
+  font-size: 16px;
+}
+
+.repsol-action-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+}
